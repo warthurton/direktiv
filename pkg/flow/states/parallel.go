@@ -84,7 +84,7 @@ func (logic *parallelLogic) Run(ctx context.Context, wakedata []byte) (*Transiti
 
 	}
 
-	var children []ChildInfo
+	var children []*ChildInfo
 	err := logic.UnmarshalMemory(&children)
 	if err != nil {
 		return nil, derrors.NewInternalError(err)
@@ -212,8 +212,7 @@ func (logic *parallelLogic) scheduleRetryAction(ctx context.Context, retry *acti
 
 }
 
-func (logic *parallelLogic) processActionResults(ctx context.Context, children []ChildInfo, results *actionResultPayload) (*Transition, error) {
-
+func (logic *parallelLogic) processActionResults(ctx context.Context, children []*ChildInfo, results *actionResultPayload) (*Transition, error) {
 	var err error
 
 	var found bool

@@ -154,7 +154,7 @@ func (instance *testerInstance) ListenForEvents(ctx context.Context, events []*m
 	return nil
 }
 
-func (instance *testerInstance) LivingChildren(ctx context.Context) []ChildInfo {
+func (instance *testerInstance) LivingChildren(ctx context.Context) []*ChildInfo {
 	return nil
 }
 

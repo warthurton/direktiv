@@ -15,7 +15,7 @@ import (
 )
 
 type actionRetryInfo struct {
-	Children []ChildInfo
+	Children []*ChildInfo
 	Idx      int
 }
 
@@ -91,8 +91,7 @@ func preprocessRetry(retry *model.RetryDefinition, attempt int, err error) (time
 
 }
 
-func scheduleRetry(ctx context.Context, instance Instance, children []ChildInfo, idx int, d time.Duration) error {
-
+func scheduleRetry(ctx context.Context, instance Instance, children []*ChildInfo, idx int, d time.Duration) error {
 	var err error
 
 	children[idx].Attempts++
