@@ -1,8 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
   "required": ["states"],
-  "title": "direktiv-workflow",
   "meta": {
     "maintainer": {
       "name": "Direktiv",
@@ -16,7 +14,13 @@
     "version": "15.09.2023",
     "createdAt": "15.09.2023"
   },
+  "type": "object",
+  "title": "workflow",
+  "additionalProperties": false,
   "properties": {
+    "direktiv_api": {
+      "type": "string"
+    },
     "url": {
       "description": "Link to further information.",
       "type": "string"
@@ -25,18 +29,21 @@
       "type": "string",
       "description": "Description of the workflow."
     },
+
     "functions": {
-      "type": "object",
+      "type": "array",
       "description": "List of function definitions for use by function-based states.",
-      "examples": [
-        "functions:\n- type: knative-workflow\n  id: request\n  image: direktiv/request:latest\n  size: small"
-      ],
-      "oneOf": [
-        { "$ref": "#/definitions/knativeNamespaceFunction" },
-        { "$ref": "#/definitions/knativeWorkflowFunction" },
-        { "$ref": "#/definitions/subflowFunction" }
-      ]
+      "additionalProperties": false,
+      "items": {
+        "type": "object",
+        "oneOf": [
+          { "$ref": "#/definitions/knativeNamespaceFunction" },
+          { "$ref": "#/definitions/knativeWorkflowFunction" },
+          { "$ref": "#/definitions/subflowFunction" }
+        ]
+      }
     },
+
     "start": {
       "type": "object",
       "description": "Configuration for how the workflow should start. If omitted from the workflow definition the DefaultStartDefinition will be used, which means the workflow will only be executed when called.",
@@ -50,12 +57,17 @@
     },
     "states": {
       "type": "array",
+      "additionalItems": false,
+      "additionalProperties": false,
       "items": {
         "type": "object",
         "oneOf": [
           {
             "title": "action",
             "type": "object",
+            "additionalItems": false,
+            "additionalProperties": false,
+
             "required": ["id", "type", "action"],
             "properties": {
               "type": {
@@ -94,11 +106,14 @@
           {
             "type": "object",
             "title": "consumeEvent",
+            "additionalItems": false,
+            "additionalProperties": false,
+
             "required": ["id", "type", "event"],
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["event"],
+                "enum": ["event", "consumeEvent"],
                 "description": "Type of the state."
               },
               "id": {
@@ -131,6 +146,9 @@
           {
             "type": "object",
             "title": "eventsAnd",
+            "additionalItems": false,
+            "additionalProperties": false,
+
             "required": ["id", "type", "events"],
             "properties": {
               "type": {
@@ -173,6 +191,9 @@
           {
             "type": "object",
             "title": "eventsXor",
+            "additionalItems": false,
+            "additionalProperties": false,
+
             "required": ["id", "type", "events"],
             "properties": {
               "type": {
@@ -229,6 +250,8 @@
           {
             "type": "object",
             "title": "foreach",
+            "additionalProperties": false,
+
             "required": ["id", "type", "array"],
             "properties": {
               "type": {
@@ -242,6 +265,9 @@
               },
               "action": {
                 "$ref": "#/definitions/actionState"
+              },
+              "array": {
+                "type": "string"
               },
               "transform": {
                 "$ref": "#/definitions/transform"
@@ -266,6 +292,9 @@
           {
             "type": "object",
             "title": "generateEvent",
+            "additionalItems": false,
+            "additionalProperties": false,
+
             "required": ["id", "type", "event"],
             "properties": {
               "type": {
@@ -304,18 +333,33 @@
                 }
               },
               "transform": {
+                "additionalItems": false,
+                "additionalProperties": false,
+
                 "$ref": "#/definitions/transform"
               },
               "transition": {
+                "additionalItems": false,
+                "additionalProperties": false,
+
                 "$ref": "#/definitions/transition"
               },
               "log": {
+                "additionalItems": false,
+                "additionalProperties": false,
+
                 "$ref": "#/definitions/log"
               },
               "metadata": {
+                "additionalItems": false,
+                "additionalProperties": false,
+
                 "$ref": "#/definitions/metadata"
               },
               "catch": {
+                "additionalItems": false,
+                "additionalProperties": false,
+
                 "$ref": "#/definitions/catch"
               }
             }
@@ -323,7 +367,7 @@
           {
             "type": "object",
             "title": "getter",
-            "required": ["id", "type", "key"],
+            "required": ["id", "type"],
             "properties": {
               "type": {
                 "type": "string",
@@ -334,9 +378,8 @@
                 "type": "string",
                 "description": "id of the state."
               },
-              "key": {
-                "type": "string",
-                "description": "Variable name."
+              "variables": {
+                "$ref": "#/definitions/variables"
               },
               "scope": {
                 "type": "string",
@@ -366,7 +409,7 @@
           {
             "type": "object",
             "title": "noop",
-            "required": ["id", "type", "log"],
+            "required": ["id", "type"],
             "properties": {
               "type": {
                 "type": "string",
@@ -448,26 +491,7 @@
                 "description": "id of the state."
               },
               "variables": {
-                "type": "array",
-                "description": "Defines variables to push.",
-                "items": {
-                  "key": {
-                    "type": "string",
-                    "description": "Variable name."
-                  },
-                  "scope": {
-                    "type": "string",
-                    "description": "Selects the scope to which the variable belongs. If undefined, defaults to instance. See Variables."
-                  },
-                  "mimeType": {
-                    "type": "string",
-                    "description": "Store a MIME type with the variable. If left undefined, it will default to application/json. Two specific MIME types cause this state to behave differently: text/plain and application/octet-stream. If the value evaluates to a JSON string the MIME type is text/plain, that string will be stored in plaintext (without JSON quotes and escapes). If if the value is a JSON string containing base64 encoded data and the MIME type is application/octet-stream, the base64 data will be decoded and stored as binary data."
-                  },
-                  "value": {
-                    "type": "string",
-                    "description": "Select or generate the data to store."
-                  }
-                }
+                "$ref": "#/definitions/variables"
               },
               "transform": {
                 "type": "string",
@@ -694,8 +718,16 @@
   },
   "definitions": {
     "transform": {
-      "type": "string",
-      "description": "Transformation to be applied to the state's output."
+      "anyOf": [
+        {
+          "type": "object",
+          "description": "Transformation to be applied to the state's output."
+        },
+        {
+          "type": "string",
+          "description": "Transformation to be applied to the state's output."
+        }
+      ]
     },
     "transition": {
       "type": "string",
@@ -738,6 +770,8 @@
     },
     "actionState": {
       "type": "object",
+      "additionalItems": false,
+      "additionalProperties": false,
       "description": "Definition of an action type state.",
       "required": ["function"],
       "properties": {
@@ -746,8 +780,16 @@
           "description": "Name of the referenced function."
         },
         "input": {
-          "type": "string",
-          "description": "Selects or generates the data to send as input to the function."
+          "anyOf": [
+            {
+              "type": "object",
+              "description": "Selects or generates the data to send as input to the function."
+            },
+            {
+              "type": "string",
+              "description": "Selects or generates the data to send as input to the function."
+            }
+          ]
         },
         "secrets": {
           "type": "array",
@@ -806,79 +848,91 @@
         }
       }
     },
-    "baseFunction": {
-      "properties": {
-        "type": {
+    "variables": {
+      "type": "array",
+      "description": "Defines variables to push.",
+      "items": {
+        "key": {
           "type": "string",
-          "description": "Identifies which kind of FunctionDefinition is being used."
+          "description": "Variable name."
         },
+        "scope": {
+          "type": "string",
+          "description": "Selects the scope to which the variable belongs. If undefined, defaults to instance. See Variables."
+        },
+        "mimeType": {
+          "type": "string",
+          "description": "Store a MIME type with the variable. If left undefined, it will default to application/json. Two specific MIME types cause this state to behave differently: text/plain and application/octet-stream. If the value evaluates to a JSON string the MIME type is text/plain, that string will be stored in plaintext (without JSON quotes and escapes). If if the value is a JSON string containing base64 encoded data and the MIME type is application/octet-stream, the base64 data will be decoded and stored as binary data."
+        },
+        "value": {
+          "type": "string",
+          "description": "Select or generate the data to store."
+        }
+      }
+    },
+    "knativeNamespaceFunction": {
+      "title": "knative-namespace",
+      "additionalProperties": false,
+      "properties": {
         "id": {
           "type": "string",
           "description": "A unique identifier for the function within the workflow definition."
+        },
+        "type": {
+          "enum": ["knative-namespace"],
+          "description": "In this case it must be set to knative-namespace."
+        },
+        "service": {
+          "type": "string",
+          "description": "URI to a function on the namespace."
         }
       },
-      "required": ["type", "id"]
-    },
-    "knativeNamespaceFunction": {
-      "allOf": [
-        { "$ref": "#/definitions/baseFunction" },
-        {
-          "properties": {
-            "type": {
-              "enum": ["knative-namespace"],
-              "description": "In this case it must be set to knative-namespace."
-            },
-            "service": {
-              "type": "string",
-              "description": "URI to a function on the namespace."
-            }
-          },
-          "required": ["service"]
-        }
-      ]
+      "required": ["id", "type", "service"]
     },
     "knativeWorkflowFunction": {
-      "allOf": [
-        { "$ref": "#/definitions/baseFunction" },
-        {
-          "properties": {
-            "type": {
-              "enum": ["knative-workflow"]
-            },
-            "image": {
-              "type": "string",
-              "description": "URI to a knative-workflow compliant container."
-            },
-            "size": {
-              "type": "string",
-              "enum": ["small", "medium", "large"],
-              "description": "Specifies the container size."
-            },
-            "cmd": {
-              "type": "string",
-              "description": "Command to run in the knative-workflow compliant container."
-            }
-          },
-          "required": ["image"]
+      "title": "knative-workflow",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "A unique identifier for the function within the workflow definition."
+        },
+        "type": {
+          "enum": ["knative-workflow"]
+        },
+        "image": {
+          "type": "string",
+          "description": "URI to a knative-workflow compliant container."
+        },
+        "size": {
+          "type": "string",
+          "enum": ["small", "medium", "large"],
+          "description": "Specifies the container size."
+        },
+        "cmd": {
+          "type": "string",
+          "description": "Command to run in the knative-workflow compliant container."
         }
-      ]
+      },
+      "required": ["id", "type", "image"]
     },
     "subflowFunction": {
-      "allOf": [
-        { "$ref": "#/definitions/baseFunction" },
-        {
-          "properties": {
-            "type": {
-              "enum": ["subflow"]
-            },
-            "workflow": {
-              "type": "string",
-              "description": "URI to a workflow within the same namespace."
-            }
-          },
-          "required": ["workflow"]
+      "title": "subflow",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "A unique identifier for the function within the workflow definition."
+        },
+        "type": {
+          "enum": ["subflow"]
+        },
+        "workflow": {
+          "type": "string",
+          "description": "URI to a workflow within the same namespace."
         }
-      ]
+      },
+      "required": ["id", "type", "workflow"]
     },
     "BaseStartDefinition": {
       "properties": {
@@ -936,7 +990,7 @@
         { "$ref": "#/definitions/BaseStartDefinition" },
         {
           "properties": {
-            "type": { "enum": ["event"] },
+            "type": { "enum": ["event", "consumeEvent"] },
             "event": { "$ref": "#/definitions/EventProperties" }
           },
           "required": ["event"]
