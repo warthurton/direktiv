@@ -65,10 +65,12 @@ type newInstanceArgs struct {
 	Invoker       string
 	DescentInfo   *enginerefactor.InstanceDescentInfo
 	TelemetryInfo *enginerefactor.InstanceTelemetryInfo
+	Headers       []byte
 }
 
 const (
-	apiCaller = "api"
+	apiCaller           = "api"
+	ForwardHeaderPrefix = "X-Direktiv-"
 )
 
 func unmarshalInstanceInputData(input []byte) interface{} {
@@ -173,7 +175,14 @@ func (engine *engine) NewInstance(ctx context.Context, args *newInstanceArgs) (*
 
 	liveData := marshalInstanceInputData(args.Input)
 
-	ri := &enginerefactor.InstanceRuntimeInfo{}
+	// setting headers coming from the API
+	// errors we don't care, we run the flow even if headers fail
+	var headers http.Header
+	_ = json.Unmarshal(args.Headers, &headers)
+
+	ri := &enginerefactor.InstanceRuntimeInfo{
+		Headers: headers,
+	}
 	riData, err := ri.MarshalJSON()
 	if err != nil {
 		panic(err)
@@ -855,6 +864,16 @@ func (engine *engine) doKnativeHTTPRequest(ctx context.Context,
 	if err != nil {
 		engine.reportError(ar, err)
 		return
+	}
+
+	// delete auth tokens
+	ar.Headers.Del("Authorization")
+	ar.Headers.Del("Direktiv-Token")
+	for name, values := range ar.Headers {
+		for _, value := range values {
+			engine.sugar.Debugf("adding api request header: %s %s", name, value)
+			req.Header.Add(fmt.Sprintf("%s%s", ForwardHeaderPrefix, name), value)
+		}
 	}
 
 	// add headers

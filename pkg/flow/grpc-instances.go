@@ -510,6 +510,7 @@ func (flow *flow) StartWorkflow(ctx context.Context, req *grpc.StartWorkflowRequ
 			// TODO: alan, CallPath: ,
 			NamespaceName: ns.Name,
 		},
+		Headers: req.Headers,
 	}
 
 	im, err := flow.engine.NewInstance(ctx, args)
@@ -614,6 +615,7 @@ func (flow *flow) AwaitWorkflow(req *grpc.AwaitWorkflowRequest, srv grpc.Flow_Aw
 			// TODO: alan, CallPath: ,
 			NamespaceName: ns.Name,
 		},
+		Headers: req.Headers,
 	}
 
 	im, err := flow.engine.NewInstance(ctx, args)

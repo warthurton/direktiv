@@ -98,6 +98,7 @@ message StartWorkflowRequest {
 	string ref = 3;
 	bytes input = 4;
 	bool hold = 5;
+	bytes headers = 6;
 }
 
 message StartWorkflowResponse {
@@ -133,6 +134,7 @@ message AwaitWorkflowRequest {
 	string path = 2;
 	string ref = 3;
 	bytes input = 4;
+	bytes headers = 5;
 }
 
 message AwaitWorkflowResponse {

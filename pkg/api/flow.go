@@ -4042,11 +4042,14 @@ func (h *flowHandler) ExecuteWorkflow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	headerBytes, _ := json.Marshal(r.Header)
+
 	in := &grpc.StartWorkflowRequest{
 		Namespace: namespace,
 		Path:      path,
 		Ref:       ref,
 		Input:     input,
+		Headers:   headerBytes,
 	}
 
 	resp, err := h.client.StartWorkflow(ctx, in)
@@ -4090,11 +4093,14 @@ func (h *flowHandler) WaitWorkflow(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	headerBytes, _ := json.Marshal(r.Header)
+
 	in := &grpc.AwaitWorkflowRequest{
 		Namespace: namespace,
 		Path:      path,
 		Ref:       ref,
 		Input:     input,
+		Headers:   headerBytes,
 	}
 
 	c, err := h.client.AwaitWorkflow(ctx, in)

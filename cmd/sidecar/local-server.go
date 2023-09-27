@@ -361,6 +361,8 @@ type functionRequest struct {
 	input      []byte
 	files      []*functionFiles
 	iterator   int
+
+	headers http.Header
 }
 
 type functionFiles struct {

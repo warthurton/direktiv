@@ -19,6 +19,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/direktiv/direktiv/pkg/flow"
 	"github.com/direktiv/direktiv/pkg/flow/grpc"
 	"github.com/direktiv/direktiv/pkg/util"
 )
@@ -98,6 +99,16 @@ func (worker *inboundWorker) doFunctionRequest(ctx context.Context, ir *function
 	req.Header.Set(IteratorHeader, fmt.Sprintf("%d", ir.iterator))
 	req.Header.Set("Direktiv-TempDir", worker.functionDir(ir))
 	req.Header.Set("Content-Type", "application/json")
+
+	for name, values := range ir.headers {
+		if strings.HasPrefix(name, flow.ForwardHeaderPrefix) &&
+			name != "X-Direktiv-Content-Length" {
+			headerName := name[len(flow.ForwardHeaderPrefix):]
+			for _, value := range values {
+				req.Header.Add(headerName, value)
+			}
+		}
+	}
 
 	cleanup := util.TraceHTTPRequest(ctx, req)
 	defer cleanup()
@@ -750,6 +761,8 @@ func (worker *inboundWorker) validateFunctionRequest(req *inboundRequest) *funct
 	if !worker.validateFilesHeaders(req, &ir.files) {
 		return nil
 	}
+
+	ir.headers = req.r.Header
 
 	return ir
 }

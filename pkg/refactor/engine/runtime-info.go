@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -21,6 +22,7 @@ type InstanceRuntimeInfo struct {
 	Flow           []string // NOTE: now that we keep a copy of the definition we could replace []string with []int
 	StateBeginTime time.Time
 	Attempts       int
+	Headers        http.Header // original headers coming from the api request
 }
 
 func (info *InstanceRuntimeInfo) MarshalJSON() ([]byte, error) {
@@ -36,15 +38,17 @@ func (info *InstanceRuntimeInfo) MarshalJSON() ([]byte, error) {
 		Flow:           info.Flow,
 		StateBeginTime: info.StateBeginTime,
 		Attempts:       info.Attempts,
+		Headers:        info.Headers,
 	})
 }
 
 type instanceRuntimeInfoV1 struct {
-	Version        string    `json:"version"`
-	Controller     string    `json:"controller"`
-	Flow           []string  `json:"flow"`
-	StateBeginTime time.Time `json:"state_begin_time"`
-	Attempts       int       `json:"attempts"`
+	Version        string      `json:"version"`
+	Controller     string      `json:"controller"`
+	Flow           []string    `json:"flow"`
+	StateBeginTime time.Time   `json:"state_begin_time"`
+	Attempts       int         `json:"attempts"`
+	Headers        http.Header `json:"headers"`
 }
 
 //nolint:dupl
@@ -80,6 +84,7 @@ func LoadInstanceRuntimeInfo(data []byte) (*InstanceRuntimeInfo, error) {
 			Flow:           v1.Flow,
 			StateBeginTime: v1.StateBeginTime,
 			Attempts:       v1.Attempts,
+			Headers:        v1.Headers,
 		}
 
 	default:

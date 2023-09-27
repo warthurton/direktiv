@@ -388,6 +388,9 @@ func (engine *engine) newIsolateRequest(ctx context.Context, im *instanceMemory,
 	ar.Container.Type = fnt
 	ar.Container.Data = inputData
 
+	// setting headers from API request
+	ar.Headers = im.instance.RuntimeInfo.Headers
+
 	wf := bytedata.ShortChecksum(im.instance.Instance.WorkflowPath)
 	revID := im.instance.Instance.RevisionID.String()
 	nsID := im.instance.Instance.NamespaceID.String()

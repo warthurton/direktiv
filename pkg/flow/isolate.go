@@ -2,6 +2,7 @@ package flow
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/direktiv/direktiv/pkg/flow/bytedata"
 	"github.com/direktiv/direktiv/pkg/functions"
@@ -49,6 +50,7 @@ type functionRequest struct {
 	Iterator  int
 	Workflow  functionWorkflow
 	Container functionContainer
+	Headers   http.Header
 }
 
 type functionContainer struct {
