@@ -1,41 +1,51 @@
 package plugins
 
 import (
+	"fmt"
 	"net/http"
 
-	"golang.org/x/exp/slog"
+	"github.com/invopop/jsonschema"
 )
 
-// example represents a generic example plugin.
-type example struct {
-	conf interface{}
+type exampleConfig struct {
+	SomeString string `json:"somestring" jsonschema:"title=The String,description=This is the string,default=VALUE,required,minLength=1,maxLength=20"`
+	SomeInt    int    `json:"someint" jsonschema:"title=The Int,description=This is the int,default=1,optional"`
 }
 
-// buildPlugin initializes the example plugin with the provided configuration and callbacks.
-func (e *example) buildPlugin(conf interface{}) (Execute, error) {
-	e.conf = conf
-
-	return e.safeProcess, nil
+type ExamplePlugin struct {
+	config exampleConfig
 }
 
-// safeProcess is the main execution method of the example plugin.
-// It slogs messages and, if a next plugin exists, forwards the request to it.
-func (e *example) safeProcess(_ http.ResponseWriter, _ *http.Request) Result {
-	slog.Debug("Executed")
-	// slog.Debug(e.conf["message"])
-
-	return Result{Status: http.StatusOK}
+func (p *ExamplePlugin) Execute(http.ResponseWriter, *http.Request) *Result {
+	return nil
 }
 
-//nolint:gochecknoinits
+func (p *ExamplePlugin) Description() *PluginDescription {
+	b, err := jsonschema.Reflect(&exampleConfig{}).MarshalJSON()
+	if err != nil {
+		panic("json schema for plugin broken")
+	}
+
+	return &PluginDescription{
+		Name:         "example",
+		Description:  "example plugin",
+		ConfigSchema: b,
+	}
+}
+
+func (p *ExamplePlugin) Instance(config interface{}) (Plugin, error) {
+	c, ok := config.(exampleConfig)
+	if !ok {
+		return nil, fmt.Errorf("invalid configuration")
+	}
+
+	// TODO validate here
+
+	return &ExamplePlugin{
+		config: c,
+	}, nil
+}
+
 func init() {
-	register(formPluginKey("v1", "example"), &example{})
-}
-
-type exampleSpec struct {
-	Conf map[string]string `json:"conf"`
-}
-
-func (e *example) GetConfigStruct() interface{} {
-	return exampleSpec{}
+	register("example-v1", &ExamplePlugin{})
 }
